@@ -1,0 +1,6 @@
+zone_id,zone_name,population,risk_level
+Z1,North Ward,12000,2
+Z2,East Ward,9000,1
+Z3,Central Ward,15000,3
+Z4,South Ward,11000,2
+Z5,West Ward,8000,1

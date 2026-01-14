@@ -1,0 +1,5 @@
+shelter_id,shelter_name,zone_id,capacity
+S1,City School Shelter,Z1,6000
+S2,Town Hall Shelter,Z3,7000
+S3,Community Center,Z4,5000
+S4,Stadium Shelter,Z5,9000

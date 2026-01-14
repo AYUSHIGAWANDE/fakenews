@@ -1,0 +1,5 @@
+resource_id,resource_type,zone_id,quantity
+R1,Ambulance,Z3,4
+R2,RescueTeam,Z1,3
+R3,FoodPackets,Z5,6000
+R4,FirstAidKits,Z2,200
