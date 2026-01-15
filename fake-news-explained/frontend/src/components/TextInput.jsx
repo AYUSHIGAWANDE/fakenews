@@ -2,11 +2,10 @@ import React from 'react';
 
 /**
  * TextInput Component
- * Large textarea for pasting/typing news with analyze button
+ * Premium textarea for news content
  */
 function TextInput({ value, onChange, onAnalyze, loading, disabled }) {
     const handleKeyDown = (e) => {
-        // Ctrl/Cmd + Enter to analyze
         if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
             e.preventDefault();
             if (!disabled && value.trim()) {
@@ -16,36 +15,29 @@ function TextInput({ value, onChange, onAnalyze, loading, disabled }) {
     };
 
     return (
-        <div className="input-section">
+        <div className="input-group">
             <label htmlFor="news-input" className="input-label">
-                📰 Paste News Article or Text
+                News Content
             </label>
             <textarea
                 id="news-input"
-                className="text-input"
-                placeholder="Paste the news article, social media post, or any text you want to verify...
-
-Example: 'BREAKING: Scientists discover miracle cure that heals ALL diseases instantly! Share before this gets deleted!'"
+                className="text-area"
+                placeholder="Paste news content here to analyze its credibility using AI..."
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
                 onKeyDown={handleKeyDown}
                 disabled={loading}
             />
             <button
-                className="analyze-btn"
+                className="analyze-button"
+                style={{ marginTop: '24px' }}
                 onClick={onAnalyze}
                 disabled={disabled || !value.trim()}
             >
                 {loading ? (
-                    <>
-                        <span className="spinner"></span>
-                        Analyzing...
-                    </>
+                    'Analyzing Content...'
                 ) : (
-                    <>
-                        <span className="btn-icon">🔍</span>
-                        Analyze News
-                    </>
+                    'Verify Credibility'
                 )}
             </button>
         </div>

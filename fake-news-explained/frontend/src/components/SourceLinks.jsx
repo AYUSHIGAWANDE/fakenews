@@ -2,14 +2,12 @@ import React from 'react';
 
 /**
  * SourceLinks Component
- * Clickable verification source links
  */
 function SourceLinks({ sources }) {
     if (!sources || sources.length === 0) {
         return null;
     }
 
-    // Default URLs for common sources
     const sourceUrls = {
         'FactCheck.org': 'https://www.factcheck.org',
         'Snopes': 'https://www.snopes.com',
@@ -24,25 +22,11 @@ function SourceLinks({ sources }) {
         'Science Magazine': 'https://www.science.org'
     };
 
-    const getSourceIcon = (name) => {
-        if (name.includes('FactCheck') || name.includes('Snopes') || name.includes('PolitiFact')) {
-            return '✅';
-        }
-        if (name.includes('WHO') || name.includes('CDC') || name.includes('NIH')) {
-            return '🏥';
-        }
-        if (name.includes('Nature') || name.includes('Science')) {
-            return '🔬';
-        }
-        return '📰';
-    };
-
     return (
         <div className="source-links">
-            <h3 className="section-title">
-                <span className="section-icon">🔗</span>
-                Verify With Trusted Sources
-            </h3>
+            <h4 style={{ color: 'var(--text-dim)', textTransform: 'uppercase', fontSize: '0.8rem', letterSpacing: '0.1em', marginBottom: '16px' }}>
+                Trusted Verification Sources
+            </h4>
             <div className="sources-grid">
                 {sources.map((source, index) => {
                     const name = typeof source === 'string' ? source : source.name;
@@ -56,9 +40,8 @@ function SourceLinks({ sources }) {
                             rel="noopener noreferrer"
                             className="source-link"
                         >
-                            <span className="source-icon">{getSourceIcon(name)}</span>
                             <span className="source-name">{name}</span>
-                            <span className="external-icon">↗</span>
+                            <span className="external-icon" style={{ marginLeft: 'auto', opacity: 0.5 }}>↗</span>
                         </a>
                     );
                 })}

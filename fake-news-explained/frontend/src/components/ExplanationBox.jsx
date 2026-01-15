@@ -2,7 +2,6 @@ import React from 'react';
 
 /**
  * ExplanationBox Component
- * Expandable panel showing sentence-level explanations
  */
 function ExplanationBox({ explanations }) {
     if (!explanations || explanations.length === 0) {
@@ -11,16 +10,16 @@ function ExplanationBox({ explanations }) {
 
     return (
         <div className="explanation-box">
-            <h3 className="section-title">
-                <span className="section-icon">⚠️</span>
-                Flagged Content ({explanations.length})
-            </h3>
+            <h4 style={{ color: 'var(--text-dim)', textTransform: 'uppercase', fontSize: '0.8rem', letterSpacing: '0.1em', marginBottom: '16px' }}>
+                Flagged Analysis ({explanations.length})
+            </h4>
             <div className="explanation-list">
                 {explanations.map((item, index) => (
                     <div key={index} className="explanation-item">
-                        <p className="explanation-sentence">"{item.sentence}"</p>
+                        <span className="explanation-sentence" style={{ borderLeft: '2px solid #ef4444', paddingLeft: '12px' }}>
+                            {item.sentence}
+                        </span>
                         <p className="explanation-reason">
-                            <span className="reason-icon">💡</span>
                             {item.reason}
                         </p>
                     </div>

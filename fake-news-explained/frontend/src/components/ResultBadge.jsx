@@ -2,43 +2,22 @@ import React from 'react';
 
 /**
  * ResultBadge Component
- * Displays the classification result with color-coded badge
  */
 function ResultBadge({ label }) {
     const getBadgeConfig = () => {
-        switch (label) {
-            case 'Likely Fake':
-                return {
-                    className: 'fake',
-                    icon: '🔴',
-                    text: 'Likely Fake'
-                };
-            case 'Unverified':
-                return {
-                    className: 'unverified',
-                    icon: '🟡',
-                    text: 'Unverified'
-                };
-            case 'Likely Real':
-                return {
-                    className: 'real',
-                    icon: '🟢',
-                    text: 'Likely Real'
-                };
-            default:
-                return {
-                    className: 'unverified',
-                    icon: '❓',
-                    text: 'Unknown'
-                };
+        const lowerLabel = label?.toLowerCase() || '';
+        if (lowerLabel.includes('real') || lowerLabel.includes('true')) {
+            return { className: 'real', text: 'VERIFIED CONTENT' };
+        } else if (lowerLabel.includes('fake') || lowerLabel.includes('false')) {
+            return { className: 'fake', text: 'SUSPICIOUS CONTENT' };
         }
+        return { className: 'unverified', text: 'UNVERIFIED' };
     };
 
     const config = getBadgeConfig();
 
     return (
-        <div className={`result-badge ${config.className}`}>
-            <span className="badge-icon">{config.icon}</span>
+        <div className={`trust-badge ${config.className}`}>
             <span className="badge-text">{config.text}</span>
         </div>
     );
