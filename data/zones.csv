@@ -1,6 +1,6 @@
-zone_id,zone_name,population,risk_level
-Z1,North Ward,12000,2
-Z2,East Ward,9000,1
-Z3,Central Ward,15000,3
-Z4,South Ward,11000,2
-Z5,West Ward,8000,1
+zone_id,zone_name,region,population,risk_level,vulnerability_score,severity_score
+Z1,North Ward,North,12000,2,3,5
+Z2,East Ward,East,9000,1,2,3
+Z3,Central Ward,Central,15000,3,4,8
+Z4,South Ward,South,11000,2,4,6
+Z5,West Ward,West,8000,1,2,3

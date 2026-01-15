@@ -1,5 +1,9 @@
-resource_id,resource_type,zone_id,quantity
-R1,Ambulance,Z3,4
-R2,RescueTeam,Z1,3
-R3,FoodPackets,Z5,6000
-R4,FirstAidKits,Z2,200
+resource_id,resource_type,zone_id,quantity,distance_km
+R1,Ambulance,Z3,4,5
+R2,DebrisTeam,Z1,3,8
+R3,FoodPackets,Z5,6000,12
+R4,FirstAidKits,Z2,200,6
+R5,Helicopter,Z3,2,0
+R6,Boat,Z4,5,10
+R7,Shelter,Z1,1,3
+R8,Shelter,Z5,1,7

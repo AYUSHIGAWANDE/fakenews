@@ -146,3 +146,84 @@ def calculate_supply_needs(population):
     food_needed = population * 2
     meds_needed = math.ceil(population / 10)
     return food_needed, meds_needed
+
+# ========== COMMANDER DASHBOARD FUNCTIONS ==========
+
+def calculate_risk_score(zone):
+    """
+    Risk = Population Score + Severity Score + Vulnerability Score
+    Population: Low(<10k)=2, Med(10k-12k)=4, High(>12k)=6
+    """
+    pop = int(zone.get("population", 0))
+    severity = int(zone.get("severity_score", 0))
+    vulnerability = int(zone.get("vulnerability_score", 0))
+    
+    # Population scoring
+    if pop < 10000:
+        pop_score = 2
+    elif pop <= 12000:
+        pop_score = 4
+    else:
+        pop_score = 6
+    
+    return pop_score + severity + vulnerability
+
+def calculate_priority_score(risk_score, distance_km):
+    """Priority = Risk / Distance (higher is more urgent)"""
+    if distance_km <= 0:
+        distance_km = 1  # Avoid division by zero
+    return risk_score / distance_km
+
+def detect_gaps(zones, resources, affected_zone_ids, disaster_type):
+    """
+    Detect resource shortages.
+    Returns list of gaps: {zone_id, resource_type, required, available, gap}
+    """
+    gaps = []
+    
+    # Define requirements per disaster type
+    if disaster_type == "Earthquake":
+        requirements = {"DebrisTeam": 2, "Ambulance": 3, "Helicopter": 1}
+    else:  # Flood
+        requirements = {"Boat": 3, "Ambulance": 2, "Helicopter": 1}
+    
+    # Check each affected zone
+    for zone in zones:
+        zid = zone["zone_id"]
+        if zid not in affected_zone_ids:
+            continue
+        
+        for res_type, required in requirements.items():
+            # Count available resources (simplified: city-wide)
+            available = sum(int(r["quantity"]) for r in resources if r["resource_type"] == res_type)
+            
+            if required > available:
+                gaps.append({
+                    "zone_id": zid,
+                    "resource_type": res_type,
+                    "required": required,
+                    "available": available,
+                    "gap": required - available
+                })
+    
+    return gaps
+
+def get_rescue_priority_order(disaster_type):
+    """Returns the priority order of rescue operations based on disaster type."""
+    if disaster_type == "Earthquake":
+        return ["DebrisTeam", "Ambulance", "FirstAidKits", "Shelter", "FoodPackets"]
+    else:  # Flood
+        return ["Boat", "Helicopter", "Shelter", "FoodPackets", "FirstAidKits"]
+
+def get_zone_status(zone, affected_zone_ids):
+    """Returns Safe / Affected / Critical based on risk."""
+    zid = zone["zone_id"]
+    if zid not in affected_zone_ids:
+        return "Safe"
+    risk = calculate_risk_score(zone)
+    if risk >= 15:
+        return "Critical"
+    elif risk >= 10:
+        return "Affected"
+    return "Safe"
+

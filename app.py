@@ -1,129 +1,196 @@
 import streamlit as st
 from logic import (
-    load_csv, build_graph, dijkstra, reconstruct_path,
-    allocate_shelters, priority_zones,
-    generate_network_graph, calculate_flight_time, calculate_supply_needs
+    load_csv, allocate_shelters, calculate_supply_needs,
+    calculate_risk_score, detect_gaps, get_rescue_priority_order, get_zone_status
 )
 
-st.set_page_config(page_title="City Disaster Management (Offline)", layout="wide")
+st.set_page_config(page_title="Commander Dashboard", layout="wide", initial_sidebar_state="expanded")
 
-st.title("🚨 CITY-WIDE DISASTER MANAGEMENT SYSTEM")
-st.caption("Offline • Route Planning • Shelter Allocation • Resource Tracking")
-
+# ========== LOAD DATA ==========
 zones = load_csv("data/zones.csv")
 shelters = load_csv("data/shelters.csv")
-roads = load_csv("data/roads.csv")
 resources = load_csv("data/resources.csv")
 
 zone_ids = [z["zone_id"] for z in zones]
-zone_names = {z["zone_id"]: z["zone_name"] for z in zones}
 
+# ========== SESSION STATE (Live Tracking) ==========
+if "rescued" not in st.session_state:
+    st.session_state.rescued = {z["zone_id"]: 0 for z in zones}
+if "approved_missions" not in st.session_state:
+    st.session_state.approved_missions = []
 
-# Validating static configurations and removing hardcoded logic
-# Sidebar for Dynamic Controls
-st.sidebar.header("🕹️ Situation Control")
-st.sidebar.warning("Report Road Incidents Here")
+# ========== SIDEBAR: MISSION CONTROL ==========
+st.sidebar.image("https://img.icons8.com/color/96/emergency.png", width=80)
+st.sidebar.title("🕹️ MISSION CONTROL")
+disaster = st.sidebar.selectbox("⚠️ Active Disaster", ["Flood", "Earthquake"])
+affected = st.sidebar.multiselect("🔥 Affected Zones", zone_ids, default=["Z3", "Z4"])
+severity_level = st.sidebar.select_slider("📊 Severity Level", ["Low", "Medium", "High", "Critical"], value="High")
 
-# Generate unique road keys for the sidebar
-all_roads_options = []
-for r in roads:
-    edge_label = f"{r['from_zone']} ↔ {r['to_zone']}"
-    # Use a sorted tuple as the value to ensure direction doesn't matter
-    val = tuple(sorted((r['from_zone'], r['to_zone'])))
-    all_roads_options.append((edge_label, val))
+st.sidebar.divider()
+st.sidebar.caption("System monitors highest population & disaster severity.")
 
-# Interactive Blocked Road Selection
-selected_blocks = []
-st.sidebar.write("Select Collapsed/Blocked Roads:")
-for label, val in all_roads_options:
-    if st.sidebar.checkbox(f"🚫 Block {label}", key=label):
-        selected_blocks.append(val)
+# ========== HEADER ==========
+st.title("🎖️ COMMANDER-LEVEL DISASTER MANAGEMENT")
+st.caption("Real-Time • Risk-Based • Population-Priority")
 
-blocked = set(selected_blocks)
+# ========== 1. QUICK ALERTS PANEL ==========
+st.markdown("### 🔔 Quick Alerts")
+col_a1, col_a2, col_a3, col_a4 = st.columns(4)
+col_a1.metric("Disaster Type", disaster, "ACTIVE")
+col_a2.metric("Severity", severity_level, "⚠️" if severity_level in ["High", "Critical"] else "")
+col_a3.metric("Zones Affected", len(affected), f"of {len(zones)}")
+total_pop = sum(int(z["population"]) for z in zones if z["zone_id"] in affected)
+col_a4.metric("Population at Risk", f"{total_pop:,}", "Immediate Action")
 
-col1, col2, col3 = st.columns(3)
-with col1:
-    disaster = st.selectbox("Disaster Type", ["Flood", "Earthquake"])
-with col2:
-    affected = st.multiselect("Affected Zones", zone_ids, default=["Z3", "Z4"])
-with col3:
-    start_zone = st.selectbox("Command Center Zone (Start)", zone_ids, index=2)
+st.divider()
 
-st.subheader("1) Priority Zones")
-prio = priority_zones(zones, set(affected))
-for r, p, zid, name in prio:
-    st.write(f"🔴 {zid} - {name} | Risk: {r} | Population: {p}")
+# ========== 2. CITY MAP VIEW (5 Regions) ==========
+st.markdown("### 🗺️ City Zone Status")
+st.caption("East | West | North | South | Central")
 
-st.subheader("2) Route Planning (Shortest Safe Paths)")
-graph = build_graph(roads)
-# Pass the dynamic set of blocked edges
-dist, parent = dijkstra(graph, start_zone, blocked_edges=blocked)
+# Create 5 columns for the 5 regions
+cols = st.columns(5)
+for i, zone in enumerate(zones):
+    with cols[i % 5]:
+        status = get_zone_status(zone, set(affected))
+        risk = calculate_risk_score(zone)
+        
+        # Color coding
+        if status == "Critical":
+            bg = "🔴"
+        elif status == "Affected":
+            bg = "🟠"
+        else:
+            bg = "🟢"
+        
+        remaining = int(zone["population"]) - st.session_state.rescued.get(zone["zone_id"], 0)
+        
+        st.markdown(f"""
+        **{bg} {zone["region"]}**
+        - Zone: {zone["zone_id"]}
+        - Pop: {remaining:,}
+        - Risk: {risk}
+        - Status: **{status}**
+        """)
 
-c1, c2 = st.columns(2)
-with c1:
-    target = st.selectbox("Select Target Zone", zone_ids, index=3)
-with c2:
-    st.write("Current Road Status:")
-    if blocked:
-        for b in blocked:
-            st.error(f"⚠️ Road {b[0]}-{b[1]} is BLOCKED")
-    else:
-        st.success("✅ All Roads Open")
+st.divider()
 
-path = reconstruct_path(parent, target)
-is_cut_off = False
+# ========== 3. RISK FACTOR CALCULATION ==========
+st.markdown("### 📊 Risk Factor Analysis")
+st.caption("Risk = Population Score + Severity Score + Vulnerability Score")
 
-if path:
-    st.success(f"Route: {' → '.join(path)} (Total Distance: {dist[target]:.1f} km)")
+# Sort zones by risk (highest first)
+risk_data = []
+for z in zones:
+    if z["zone_id"] in affected:
+        risk = calculate_risk_score(z)
+        risk_data.append((risk, z))
+risk_data.sort(key=lambda x: -x[0])
+
+for risk, z in risk_data:
+    st.progress(min(risk / 20, 1.0), text=f"**{z['zone_name']}** — Risk Score: {risk}/20")
+
+st.divider()
+
+# ========== 4. DISASTER-SPECIFIC RESCUE OPERATIONS ==========
+st.markdown(f"### 🚨 {disaster.upper()} RESCUE OPERATIONS")
+priority_order = get_rescue_priority_order(disaster)
+st.caption(f"Priority Order: {' → '.join(priority_order)}")
+
+# Show rescue cards for each affected zone (sorted by risk)
+for risk, z in risk_data:
+    zid = z["zone_id"]
+    remaining = int(z["population"]) - st.session_state.rescued.get(zid, 0)
+    
+    with st.expander(f"📍 **{z['zone_name']}** | Risk: {risk} | Stranded: {remaining:,}", expanded=True):
+        col1, col2, col3 = st.columns([2, 2, 1])
+        
+        with col1:
+            if disaster == "Earthquake":
+                st.write("🧱 Deploy Debris Rescue Team")
+                st.write("🚑 Dispatch Ambulances")
+            else:
+                st.write("🛟 Deploy Water Rescue (Boats)")
+                st.write("🚁 Dispatch Helicopter")
+        
+        with col2:
+            st.write("🏕️ Assign to Shelter")
+            st.write("📦 Food & First Aid")
+        
+        with col3:
+            if st.button(f"✅ APPROVE RESCUE", key=f"approve_{zid}"):
+                # Simulate rescuing 500 people per click
+                st.session_state.rescued[zid] = st.session_state.rescued.get(zid, 0) + 500
+                st.session_state.approved_missions.append({
+                    "zone": zid,
+                    "disaster": disaster,
+                    "status": "In Progress"
+                })
+                st.rerun()
+
+st.divider()
+
+# ========== 5. RESOURCE ALLOCATION & GAP DETECTION ==========
+st.markdown("### ⚠️ Resource Gap Analysis")
+st.caption("Required > Available = GAP")
+
+gaps = detect_gaps(zones, resources, set(affected), disaster)
+
+if gaps:
+    for g in gaps:
+        st.error(f"🚨 **{g['resource_type']}** — Needed: {g['required']} | Available: {g['available']} | **GAP: {g['gap']}**")
 else:
-    is_cut_off = True
-    st.error("⛔ NO ROAD ACCESS! ZONE IS CUT OFF.")
+    st.success("✅ All resource requirements met!")
 
-st.markdown("---")
-st.markdown("### 🗺️ Live Network Map")
-graph_dot = generate_network_graph(roads, blocked, path)
-st.graphviz_chart(graph_dot)
+st.divider()
 
-st.subheader("3) Rescue Operations (Extraction)")
-if is_cut_off:
-    st.warning(f"🚨 ZONE {target} IS ISOLATED. DEPLOYING AIR RESCUE.")
-    flight_time = calculate_flight_time(None, None) # Placeholder coords
-    st.write(f"🚁 Helicopter Dispatch: Command Center → {target}")
-    st.write(f"⏱️ Est. Flight Time: {flight_time:.0f} mins (Direct Path)")
-else:
-    st.success(f"🚑 Ground Ambulance Dispatch: Command Center → {target}")
-    st.write(f"⏱️ Est. Drive Time: {dist[target] * 2:.0f} mins (at 30km/h)")
+# ========== 6. SUPPLY LOGISTICS ==========
+st.markdown("### 📦 Supply Requirements")
 
-st.subheader("4) Supply Operations (Food & Meds)")
-# Calculate needs for affected zones
-st.write("Daily Supply Requirements for Affected Zones:")
 for z in zones:
     if z["zone_id"] in affected:
         pop = int(z["population"])
         food, meds = calculate_supply_needs(pop)
         
-        # Check against fake stock for demo
-        stock_food = 500 # Simulated stock
-        deficit = food - stock_food
-        
-        expander = st.expander(f"📦 Needs for {z['zone_name']} (Pop: {pop})", expanded=True)
-        with expander:
-            c1, c2 = st.columns(2)
-            c1.metric("🍚 Food Packets", f"{food}", delta=f"-{deficit}" if deficit > 0 else "OK", delta_color="inverse")
-            c2.metric("💊 First Aid Kits", f"{meds}", "Urgent" if meds > 50 else "Standard")
-            
-            if deficit > 0:
-                st.error(f"CRITICAL SHORTAGE: Need {deficit} more packets!")
-                st.button(f"🚀 Dispatch Supply Drop to {z['zone_id']}", key=f"btn_{z['zone_id']}")
+        col_s1, col_s2, col_s3 = st.columns(3)
+        col_s1.write(f"**{z['zone_name']}**")
+        col_s2.metric("Food Packets", f"{food:,}")
+        col_s3.metric("First Aid Kits", f"{meds:,}")
 
-st.subheader("5) Shelter Allocation")
+st.divider()
+
+# ========== 7. SHELTER ALLOCATION ==========
+st.markdown("### 🏠 Shelter Allocation")
+
 alloc = allocate_shelters(zones, shelters, set(affected))
 for zid, sid, people, szone in alloc:
     if sid == "NO_SPACE":
-        st.error(f"{zid} ({zone_names[zid]}): {people} people have no shelter space!")
+        st.error(f"❌ **{zid}**: {people:,} people — NO SHELTER AVAILABLE")
     else:
-        st.info(f"{zid} → {sid} (Shelter Zone: {szone}) : {people} people")
+        st.write(f"✅ **{zid}** → {sid} ({szone}) — {people:,} people")
 
-st.subheader("6) Resource Tracker")
-for r in resources:
-    st.write(f"🚑 {r['resource_type']} | Zone: {r['zone_id']} | Qty: {r['quantity']}")
+st.divider()
+
+# ========== 8. COMMANDER ACTION LOG ==========
+st.markdown("### 📋 Approved Missions")
+
+if st.session_state.approved_missions:
+    for m in st.session_state.approved_missions[-5:]:  # Show last 5
+        st.write(f"✅ Zone **{m['zone']}** — {m['disaster']} Rescue — {m['status']}")
+else:
+    st.info("No missions approved yet. Use the APPROVE button above.")
+
+st.divider()
+
+# ========== 9. POST-RESCUE REPORT ==========
+st.markdown("### 📈 Response Summary")
+
+total_rescued = sum(st.session_state.rescued.values())
+col_r1, col_r2, col_r3 = st.columns(3)
+col_r1.metric("People Rescued", f"{total_rescued:,}")
+col_r2.metric("Missions Approved", len(st.session_state.approved_missions))
+col_r3.metric("Zones Stabilized", sum(1 for z in zones if get_zone_status(z, set(affected)) == "Safe"))
+
+# ========== FOOTER ==========
+st.divider()
+st.caption("💡 _This system supports disaster commanders by calculating population-based risk, optimizing distance-based resource allocation, and coordinating earthquake and flood rescue operations in real time._")

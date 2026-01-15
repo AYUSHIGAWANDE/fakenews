@@ -1,24 +1,32 @@
-# 🚨 City Disaster Management System
+# 🎖️ Commander-Level Disaster Management System
 
-**An offline-first decision support system that optimizes emergency response logistics.**
+**Real-Time • Risk-Based • Population-Priority**
 
-### About the Project
-During urban disasters like floods or earthquakes, rapid decision-making saves lives. This application acts as a digital command center for incident commanders. It processes real-time data to identify safe routes and allocate resources efficiently, eliminating the guesswork from emergency logistics.
+> _"This system supports disaster commanders by calculating population-based risk, optimizing distance-based resource allocation, and coordinating earthquake and flood rescue operations in real time."_
 
-### ⚡ Key Features
-*   **🚁 Rescue Operations (New):** Auto-switches between **Ambulance** (Road) and **Helicopter** (Air) based on road accessibility.
-*   **📦 Supply Chain (New):** Tracks Food & First Aid deficits for every shelter based on population data.
-*   **🕹️ Dynamic Situation Room:** Sidebar controls allow commanders to blocking roads in real-time to simulate floods/collapses.
-*   **Smart Pathfinding:** Uses **Dijkstra’s Algorithm** to calculate the safeset routes avoiding user-defined danger zones.
-*   **Interactive Network Map:** Visualizes the city grid, highlighting safe roads in green and blocked danger zones in red.
+---
 
-### 🛠️ Tech Stack
-*   **Python:** Core logic and data processing.
-*   **Streamlit:** Interactive web-based user interface.
-*   **Graph Theory:** Mathematical foundation for route optimization.
-*   **CSV:** Lightweight, offline-capable data storage.
+## ⚡ Key Features
 
-### 🚀 Getting Started
-1.  Clone the repository.
-2.  Install requirements: `pip install streamlit`
-3.  Run the application: `python -m streamlit run app.py`
+| Feature | Description |
+|---------|-------------|
+| 🗺️ **City Zone Map** | 5-region view (East/West/North/South/Central) with live status |
+| 📊 **Risk Engine** | Formula: `Risk = Population + Severity + Vulnerability` |
+| 🚨 **Disaster Logic** | Earthquake (Debris → Ambulance) vs Flood (Boats → Shelter) |
+| ⚠️ **Gap Detection** | Alerts when `Required > Available` resources |
+| 📦 **Supply Calculator** | 2 food packets/person, 1 first aid kit/10 people |
+| ✅ **Commander Actions** | Approve missions, track rescued population |
+
+---
+
+## 🛠️ Tech Stack
+- **Python** + **Streamlit**
+- CSV-based offline data (no database required)
+
+---
+
+## 🚀 Run the App
+```bash
+pip install -r requirements.txt
+python -m streamlit run app.py
+```
