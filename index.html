@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Fake News Explained - AI-powered news verification using NLP">
+    <title>Fake News Explained | AI News Verification</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a1a;
+            --bg-secondary: #12122a;
+            --bg-glass: rgba(26, 26, 60, 0.6);
+            --bg-glass-light: rgba(255, 255, 255, 0.05);
+            --accent-primary: #6366f1;
+            --accent-secondary: #8b5cf6;
+            --accent-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+            --status-fake: #ef4444;
+            --status-fake-bg: rgba(239, 68, 68, 0.15);
+            --status-unverified: #f59e0b;
+            --status-unverified-bg: rgba(245, 158, 11, 0.15);
+            --status-real: #10b981;
+            --status-real-bg: rgba(16, 185, 129, 0.15);
+            --text-primary: #ffffff;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --border-glow: rgba(99, 102, 241, 0.4);
+            --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.3);
+            --shadow-glow: 0 0 30px rgba(99, 102, 241, 0.2);
+            --radius-md: 12px;
+            --radius-lg: 20px;
+            --radius-xl: 28px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background:
+                radial-gradient(circle at 20% 80%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.15) 0%, transparent 50%);
+            z-index: -1;
+            animation: gradientShift 20s ease-in-out infinite;
+        }
+
+        @keyframes gradientShift {
+
+            0%,
+            100% {
+                transform: translate(0, 0);
+            }
+
+            50% {
+                transform: translate(-1%, 1%);
+            }
+        }
+
+        .app {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px 60px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .logo-icon {
+            font-size: 48px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        .title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .glass-card {
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 28px;
+            box-shadow: var(--shadow-soft);
+            transition: all 0.3s ease;
+        }
+
+        .glass-card:hover {
+            border-color: var(--border-glow);
+            box-shadow: var(--shadow-soft), var(--shadow-glow);
+        }
+
+        .input-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .text-input {
+            width: 100%;
+            min-height: 200px;
+            padding: 20px;
+            background: var(--bg-glass-light);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 1rem;
+            line-height: 1.7;
+            resize: vertical;
+            transition: all 0.3s ease;
+        }
+
+        .text-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .text-input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+
+        .analyze-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 16px 32px;
+            margin-top: 20px;
+            background: var(--accent-gradient);
+            border: none;
+            border-radius: var(--radius-md);
+            color: white;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        }
+
+        .analyze-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(99, 102, 241, 0.5);
+        }
+
+        .analyze-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: none;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .results-section {
+            margin-top: 32px;
+            animation: fadeInUp 0.5s ease;
+            display: none;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 24px;
+            border-radius: var(--radius-xl);
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 24px;
+        }
+
+        .result-badge.fake {
+            background: var(--status-fake-bg);
+            color: var(--status-fake);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .result-badge.unverified {
+            background: var(--status-unverified-bg);
+            color: var(--status-unverified);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .result-badge.real {
+            background: var(--status-real-bg);
+            color: var(--status-real);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .trust-score {
+            margin-bottom: 28px;
+        }
+
+        .score-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .score-label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+
+        .score-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .score-value.fake {
+            color: var(--status-fake);
+        }
+
+        .score-value.unverified {
+            color: var(--status-unverified);
+        }
+
+        .score-value.real {
+            color: var(--status-real);
+        }
+
+        .score-bar {
+            height: 12px;
+            background: var(--bg-glass-light);
+            border-radius: 6px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .score-fill {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 1s ease-out;
+            width: 0%;
+        }
+
+        .score-fill.fake {
+            background: linear-gradient(90deg, var(--status-fake), #f87171);
+        }
+
+        .score-fill.unverified {
+            background: linear-gradient(90deg, var(--status-unverified), #fbbf24);
+        }
+
+        .score-fill.real {
+            background: linear-gradient(90deg, var(--status-real), #34d399);
+        }
+
+        .summary-box {
+            background: var(--bg-glass-light);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            margin-bottom: 16px;
+        }
+
+        .explanation-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .explanation-item {
+            background: var(--bg-glass-light);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 16px;
+        }
+
+        .explanation-sentence {
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            margin-bottom: 8px;
+            font-style: italic;
+            border-left: 3px solid var(--status-fake);
+            padding-left: 12px;
+        }
+
+        .explanation-reason {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .sources-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .source-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 18px;
+            background: var(--bg-glass-light);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .source-link:hover {
+            background: rgba(99, 102, 241, 0.1);
+            border-color: var(--accent-primary);
+            transform: translateY(-2px);
+        }
+
+        .disclaimer {
+            margin-top: 40px;
+            padding: 16px 20px;
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            border-radius: var(--radius-md);
+            color: var(--status-unverified);
+            font-size: 0.85rem;
+            text-align: center;
+        }
+
+        .error-box {
+            background: var(--status-fake-bg);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            color: var(--status-fake);
+            text-align: center;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        @media (max-width: 768px) {
+            .app {
+                padding: 24px 16px 40px;
+            }
+
+            .title {
+                font-size: 1.8rem;
+            }
+
+            .glass-card {
+                padding: 20px;
+            }
+
+            .text-input {
+                min-height: 150px;
+            }
+
+            .sources-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app">
+        <header class="header">
+            <div class="logo">
+                <span class="logo-icon">🔍</span>
+                <h1 class="title">Fake News Explained</h1>
+            </div>
+            <p class="subtitle">AI-powered news verification using Natural Language Processing</p>
+        </header>
+
+        <main>
+            <div class="glass-card">
+                <div class="input-section">
+                    <label for="news-input" class="input-label">📰 Paste News Article or Text</label>
+                    <textarea id="news-input" class="text-input"
+                        placeholder="Paste the news article, social media post, or any text you want to verify...
+
+Example: 'BREAKING: Scientists discover miracle cure that heals ALL diseases instantly! Share before this gets deleted!'"></textarea>
+                    <button id="analyze-btn" class="analyze-btn">
+                        <span class="spinner" id="spinner"></span>
+                        <span id="btn-text">🔍 Analyze News</span>
+                    </button>
+                </div>
+
+                <div id="error-box" class="error-box"></div>
+
+                <div id="results-section" class="results-section">
+                    <div id="result-badge" class="result-badge"></div>
+
+                    <div class="trust-score">
+                        <div class="score-header">
+                            <span class="score-label">Trust Score</span>
+                            <span id="score-value" class="score-value">0/100</span>
+                        </div>
+                        <div class="score-bar">
+                            <div id="score-fill" class="score-fill"></div>
+                        </div>
+                    </div>
+
+                    <div id="summary-box" class="summary-box"></div>
+
+                    <div id="explanations-section">
+                        <h3 class="section-title">⚠️ Flagged Content</h3>
+                        <div id="explanation-list" class="explanation-list"></div>
+                    </div>
+
+                    <div id="sources-section" style="margin-top: 24px;">
+                        <h3 class="section-title">🔗 Verify With Trusted Sources</h3>
+                        <div id="sources-grid" class="sources-grid"></div>
+                    </div>
+                </div>
+
+                <div id="empty-state" class="empty-state">
+                    <div class="empty-icon">📋</div>
+                    <p>Paste or type news content above and click "Analyze News" to check its credibility.</p>
+                </div>
+            </div>
+
+            <div class="disclaimer">
+                ⚠️ This system assists news verification and does not replace professional fact-checking.
+                Always verify important information with multiple trusted sources.
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000';
+
+        const sourceUrls = {
+            'FactCheck.org': 'https://www.factcheck.org',
+            'Snopes': 'https://www.snopes.com',
+            'PolitiFact': 'https://www.politifact.com',
+            'Reuters': 'https://www.reuters.com',
+            'Associated Press': 'https://apnews.com',
+            'BBC News': 'https://www.bbc.com/news',
+            'WHO': 'https://www.who.int',
+            'CDC': 'https://www.cdc.gov',
+            'NIH': 'https://www.nih.gov'
+        };
+
+        const analyzeBtn = document.getElementById('analyze-btn');
+        const newsInput = document.getElementById('news-input');
+        const spinner = document.getElementById('spinner');
+        const btnText = document.getElementById('btn-text');
+        const resultsSection = document.getElementById('results-section');
+        const emptyState = document.getElementById('empty-state');
+        const errorBox = document.getElementById('error-box');
+
+        analyzeBtn.addEventListener('click', analyzeNews);
+
+        async function analyzeNews() {
+            const text = newsInput.value.trim();
+            if (!text) {
+                alert('Please enter some text to analyze!');
+                return;
+            }
+
+            // Reset score bar width immediately
+            document.getElementById('score-fill').style.width = '0%';
+
+            // Show loading state
+            spinner.style.display = 'block';
+            btnText.textContent = 'Analyzing...';
+            analyzeBtn.disabled = true;
+            errorBox.style.display = 'none';
+            resultsSection.style.display = 'none';
+            emptyState.style.display = 'none';
+
+            console.log('Sending request to:', API_URL + '/analyze');
+            console.log('Text:', text);
+
+            try {
+                const response = await fetch(`${API_URL}/analyze`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: text })
+                });
+
+                console.log('Response status:', response.status);
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Failed to analyze text');
+                }
+
+                const data = await response.json();
+                console.log('API Response:', data);
+                displayResults(data);
+
+            } catch (error) {
+                console.error('Error:', error);
+                let errorMsg = error.message;
+                if (error.message === 'Failed to fetch') {
+                    errorMsg = 'Cannot connect to server. Make sure the backend is running on http://localhost:5000';
+                }
+                errorBox.textContent = '❌ ' + errorMsg;
+                errorBox.style.display = 'block';
+            } finally {
+                spinner.style.display = 'none';
+                btnText.textContent = '🔍 Analyze News';
+                analyzeBtn.disabled = false;
+            }
+        }
+
+        function displayResults(data) {
+            console.log('Displaying results:', data);
+
+            // Badge
+            const badge = document.getElementById('result-badge');
+            let badgeClass, badgeIcon;
+
+            const label = data.label || 'Unknown';
+            const trustScore = data.trust_score || 0;
+
+            console.log('Label:', label, 'Trust Score:', trustScore);
+
+            if (label === 'Likely Fake') {
+                badgeClass = 'fake';
+                badgeIcon = '🔴';
+            } else if (label === 'Unverified') {
+                badgeClass = 'unverified';
+                badgeIcon = '🟡';
+            } else {
+                badgeClass = 'real';
+                badgeIcon = '🟢';
+            }
+
+            badge.className = 'result-badge ' + badgeClass;
+            badge.innerHTML = '<span>' + badgeIcon + '</span> ' + label;
+
+            // Trust Score
+            const scoreValue = document.getElementById('score-value');
+            const scoreFill = document.getElementById('score-fill');
+
+            scoreValue.textContent = trustScore + '/100';
+            scoreValue.className = 'score-value ' + badgeClass;
+            scoreFill.className = 'score-fill ' + badgeClass;
+
+            // Animate the score bar
+            setTimeout(function () {
+                scoreFill.style.width = trustScore + '%';
+            }, 100);
+
+            // Summary
+            const summaryBox = document.getElementById('summary-box');
+            summaryBox.textContent = data.summary || 'Analysis complete.';
+
+            // Explanations
+            const explanationList = document.getElementById('explanation-list');
+            const explanationsSection = document.getElementById('explanations-section');
+            explanationList.innerHTML = '';
+
+            if (data.explanations && data.explanations.length > 0) {
+                explanationsSection.style.display = 'block';
+                data.explanations.forEach(function (exp) {
+                    const item = document.createElement('div');
+                    item.className = 'explanation-item';
+                    item.innerHTML = '<p class="explanation-sentence">"' + exp.sentence + '"</p>' +
+                        '<p class="explanation-reason">💡 ' + exp.reason + '</p>';
+                    explanationList.appendChild(item);
+                });
+            } else {
+                explanationsSection.style.display = 'none';
+            }
+
+            // Sources
+            const sourcesGrid = document.getElementById('sources-grid');
+            sourcesGrid.innerHTML = '';
+
+            if (data.sources && data.sources.length > 0) {
+                data.sources.forEach(function (source) {
+                    const url = sourceUrls[source] || 'https://www.google.com/search?q=' + encodeURIComponent(source);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.target = '_blank';
+                    link.className = 'source-link';
+                    link.innerHTML = '<span>✅</span><span>' + source + '</span><span style="color: var(--text-muted)">↗</span>';
+                    sourcesGrid.appendChild(link);
+                });
+            }
+
+            resultsSection.style.display = 'block';
+            emptyState.style.display = 'none';
+        }
+    </script>
+</body>
+
+</html>
