@@ -1,8 +1,0 @@
-from_zone,to_zone,distance_km
-Z1,Z2,4
-Z2,Z3,3
-Z3,Z4,5
-Z4,Z5,4
-Z1,Z3,6
-Z2,Z4,7
-Z3,Z5,6
