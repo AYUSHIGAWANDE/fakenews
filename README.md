@@ -6,10 +6,11 @@
 During urban disasters like floods or earthquakes, rapid decision-making saves lives. This application acts as a digital command center for incident commanders. It processes real-time data to identify safe routes and allocate resources efficiently, eliminating the guesswork from emergency logistics.
 
 ### ⚡ Key Features
-*   **Smart Pathfinding:** Uses **Dijkstra’s Algorithm** to calculate the safest, shortest routes for emergency vehicles, automatically rerouting around blocked or hazardous zones.
-*   **Interactive Network Map:** Visualizes the entire city grid, highlighting open roads in green and danger zones in red for instant situational awareness.
-*   **Shelter Allocation:** Instantly matches displaced populations to the nearest available shelters, tracking capacity to prevent overcrowding.
-*   **Resource Tracking:** Monitors the real-time status and location of ambulances, fire trucks, and personnel.
+*   **🚁 Rescue Operations (New):** Auto-switches between **Ambulance** (Road) and **Helicopter** (Air) based on road accessibility.
+*   **📦 Supply Chain (New):** Tracks Food & First Aid deficits for every shelter based on population data.
+*   **🕹️ Dynamic Situation Room:** Sidebar controls allow commanders to blocking roads in real-time to simulate floods/collapses.
+*   **Smart Pathfinding:** Uses **Dijkstra’s Algorithm** to calculate the safeset routes avoiding user-defined danger zones.
+*   **Interactive Network Map:** Visualizes the city grid, highlighting safe roads in green and blocked danger zones in red.
 
 ### 🛠️ Tech Stack
 *   **Python:** Core logic and data processing.

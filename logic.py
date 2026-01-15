@@ -130,3 +130,19 @@ def generate_network_graph(roads, blocked_edges, path=None):
     
     dot.append('}')
     return "\n".join(dot)
+
+def calculate_flight_time(zone_a_coords, zone_b_coords, speed_kmh=250):
+    # Simple Euclidean distance for "Air travel"
+    # Assuming coords are simple (x, y) for this demo. 
+    # In reality, we'd use Haversine on lat/lon.
+    # For this offline demo, we simulate distance simply as 10km fixed or random if no coords.
+    # Let's keep it simple: 15km average for air rescue across city.
+    dist_km = 15.0 
+    time_hours = dist_km / speed_kmh
+    return time_hours * 60 # minutes
+
+def calculate_supply_needs(population):
+    # Rule: 2 food packets per person, 1 kit per 10 people
+    food_needed = population * 2
+    meds_needed = math.ceil(population / 10)
+    return food_needed, meds_needed
